@@ -1,6 +1,4 @@
-# Lexer: Goes through input character by character and breaks up text into tokens 
 
-# Tokens = simple objects with a type and sometimes a value
 
 #######################################
 # CONSTANTS
@@ -19,7 +17,7 @@ class Error:
         self.error_name = error_name
         self.details = details
 
-    def as_string(self):
+    def as_string(self): # Returns error as string
         result  = f'{self.error_name}: {self.details}\n'
         result += f'File {self.pos_start.fn}, line {self.pos_start.ln + 1}'
         return result
@@ -33,7 +31,7 @@ class IllegalCharError(Error):
 #######################################
 
 class Position:
-    def __init__(self, idx, ln, col, fn, ftxt):
+    def __init__(self, idx, ln, col, fn, ftxt): # idx = index, ln = line number, col = column number, fn = file name, ftxt = file text
         self.idx = idx
         self.ln = ln
         self.col = col
@@ -54,16 +52,16 @@ class Position:
         return Position(self.idx, self.ln, self.col, self.fn, self.ftxt)
 
 #######################################
-# TOKENS
+# TOKENS : Simple objects with a type and sometimes a value
 #######################################
 
-TT_INT		= 'INT'
+TT_INT		= 'INT' # TT = Token type
 TT_FLOAT    = 'FLOAT'
 TT_PLUS     = 'PLUS'
 TT_MINUS    = 'MINUS'
 TT_MUL      = 'MUL'
 TT_DIV      = 'DIV'
-TT_LPAREN   = 'LPAREN'
+TT_LPAREN   = 'LPAREN' # LPAREN = Left Parenthesis
 TT_RPAREN   = 'RPAREN'
 
 class Token:
@@ -76,7 +74,7 @@ class Token:
         return f'{self.type}'
 
 #######################################
-# LEXER
+# LEXER: Goes through input character by character and breaks up text into tokens 
 #######################################
 
 class Lexer:
@@ -87,15 +85,15 @@ class Lexer:
         self.current_char = None
         self.advance()
 
-    def advance(self):
+    def advance(self): # Advances the position of the lexer
         self.pos.advance(self.current_char)
         self.current_char = self.text[self.pos.idx] if self.pos.idx < len(self.text) else None
 
-    def make_tokens(self):
+    def make_tokens(self): # Makes a list of tokens from the input text
         tokens = []
 
         while self.current_char != None:
-            if self.current_char in ' \t':
+            if self.current_char in ' \t': # Checks for whitespaces
                 self.advance()
             elif self.current_char in DIGITS:
                 tokens.append(self.make_number())
@@ -118,6 +116,7 @@ class Lexer:
                 tokens.append(Token(TT_RPAREN))
                 self.advance()
             else:
+                # Return error if we don't find the character we're looking for
                 pos_start = self.pos.copy()
                 char = self.current_char
                 self.advance()
@@ -128,10 +127,11 @@ class Lexer:
     def make_number(self):
         num_str = ''
         dot_count = 0
-
+        
+        # Checks if character is a digit or a decimal point
         while self.current_char != None and self.current_char in DIGITS + '.':
             if self.current_char == '.':
-                if dot_count == 1: break
+                if dot_count == 1: break # Can't have more than one decimal point
                 dot_count += 1
                 num_str += '.'
             else:
@@ -142,6 +142,18 @@ class Lexer:
             return Token(TT_INT, int(num_str))
         else:
             return Token(TT_FLOAT, float(num_str))
+
+
+#######################################
+# NODES : Simple objects with a type and children
+#######################################
+
+class NumberNode: #Node in operation tree
+    def __init__(self, token):
+        self.token = token
+
+    def __repr__(self) -> str:
+        return f'{self.token}'
 
 #######################################
 # RUN
